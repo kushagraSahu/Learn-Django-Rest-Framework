@@ -20,11 +20,12 @@ from quickstart import views
 #Because we're using Viewsets instead of views, we can automatically generate the URL conf of our API, by simply registering the viewsets with a router class.
 #If we need more control over the API urls we can simply drop down to using regular class based views, and writing the URL Conf explicitly.
 router = routers.DefaultRouter()
-router.register(r'users', views.UserViewSet)
+router.register(r'users', views.UserViewSet)#Automatic generation of URL conf of our User API by registering the UserViewSet with the router class.
 router.register(r'groups', views.GroupViewSet)
 
 urlpatterns = [
 	url(r'^', include(router.urls)),
 	#We're including default login and logout views for use with the browsable API.(optional).
 	url(r'^api-auth/', include('rest_framework.urls', namespace = 'rest_framework')),
+    url(r'^', include('snippets.urls')),
 ]
