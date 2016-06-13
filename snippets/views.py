@@ -1,9 +1,9 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
-from snippets.models import snippets
+from snippets.models import Snippet
 from snippets.serializers import SnippetSerializer
 
 class JSONResponse(HttpResponse):
@@ -31,15 +31,38 @@ class JSONResponse(HttpResponse):
 def snippet_list(request):
 	#To list all code snippets, or create a new snippet
 	if request.method == 'GET':
-        snippets = Snippet.objects.all()
-        serializer = SnippetSerializer(snippets, many=True)
-        return JSONResponse(serializer.data)
+		snippets = Snippet.objects.all()
+		serializer = SnippetSerializer(snippets, many=True)
+		return JSONResponse(serializer.data)
 	#Note that because we want to be able to POST to this view from clients that won't have a CSRF token we need to mark the view as csrf_exempt
-    elif request.method == 'POST':
-        data = JSONParser().parse(request)
-        serializer = SnippetSerializer(data=data)
-        if serializer.is_valid():
-            serializer.save()
-            return JSONResponse(serializer.data, status=201)
-        return JSONResponse(serializer.errors, status=400)
+	elif request.method == 'POST':
+		data = JSONParser().parse(request)
+		serializer = SnippetSerializer(data=data)
+		if serializer.is_valid():
+			serializer.save()
+			return JSONResponse(serializer.data, status=201)
+		return JSONResponse(serializer.errors, status=400)
 
+# view which corresponds to an individual snippet, and can be used to retrieve, update or delete the snippet.
+@csrf_exempt
+def snippet_detail(request, pk):
+	# try:
+ #        snippet = Snippet.objects.get(pk=pk)
+ #    except Snippet.DoesNotExist:
+ #        return HttpResponse(status=404)
+	snippet = get_object_or_404(Snippet, pk=pk)
+	if request.method == 'GET':
+		serializer = SnippetSerializer(snippet)
+		return JSONResponse(serializer.data)
+
+	elif request.method == 'PUT':
+		data = JSONParser().parse(request)
+		serializer = SnippetSerializer(snippet, data=data)
+		if serializer.is_valid():
+			serializer.save()
+			return JSONResponse(serializer.data)
+		return JSONResponse(serializer.errors, status=400)
+
+	elif request.method == 'DELETE':
+		snippet.delete()
+		return HttpResponse(status=204)
