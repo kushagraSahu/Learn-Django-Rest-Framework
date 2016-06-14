@@ -24,8 +24,7 @@ router.register(r'users', views.UserViewSet)#Automatic generation of URL conf of
 router.register(r'groups', views.GroupViewSet)
 
 urlpatterns = [
-	url(r'^', include(router.urls)),
+    url(r'^', include('snippets.urls')),
 	#We're including default login and logout views for use with the browsable API.(optional).
 	url(r'^api-auth/', include('rest_framework.urls', namespace = 'rest_framework')),
-    url(r'^', include('snippets.urls')),
 ]

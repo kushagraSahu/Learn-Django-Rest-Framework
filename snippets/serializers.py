@@ -1,7 +1,6 @@
-# The first thing we need to get started on our Web API is to provide a way of serializing and deserializing the snippet instances into representations such as json.
-#We can do this by declaring serializers that work very similar to Django's forms.
 from rest_framework import serializers
 from snippets.models import Snippet, LANGUAGE_CHOICES, STYLE_CHOICES
+from django.contrib.auth.models import User
 
 # class SnippetSerializer(serializers.Serializer):
 # 	pk = serializers.IntegerField(read_only=True)
@@ -13,9 +12,13 @@ from snippets.models import Snippet, LANGUAGE_CHOICES, STYLE_CHOICES
 # 	style = serializers.ChoiceField(choices=STYLE_CHOICES,default='friendly')
 
 class SnippetSerializer(serializers.ModelSerializer):
+	owner = serializers.ReadOnlyField(source='owner.username')
+	#The source argument controls which attribute is used to populate a field, and can point at any attribute on the serialized instance. It can also take the dotted notation shown
+	#above, in which case it will traverse the given attributes.
+	#owner = serializers.CharField(source='owner.username', read_only=True)
 	class Meta:
 		model = Snippet
-		fields = ('id', 'title', 'code', 'linenos', 'language', 'style')
+		fields = ('owner', 'id', 'title', 'code', 'linenos', 'language', 'style')
 
 
 	#The create() and update() methods define how fully fledged instances are created or modified when calling serializer.save()
@@ -36,3 +39,11 @@ class SnippetSerializer(serializers.ModelSerializer):
 		instance.style = validated_data.get('style', instance.style)
 		instance.save()
 		return instance
+
+class UserSerializer(serializers.ModelSerializer):
+#Because 'snippets' is a reverse relationship on the User model, it will not be included by default when using the ModelSerializer class, so we needed to add an explicit field for it.
+	snippets = serializers.PrimaryKeyRelatedField(queryset=Snippet.objects.all(), many=True)
+	
+	class Meta:
+		model = User
+		fields = ('id', 'username', 'snippets')
